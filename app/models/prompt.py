@@ -7,4 +7,7 @@ app = FastAPI()
 
 class PromptRequest(BaseModel):
     prompt: str 
-    
+
+class PromptResponse(BaseModel):
+    org_prompt: str
+    optimized_prompt: str
