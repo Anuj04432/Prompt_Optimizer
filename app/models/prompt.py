@@ -1,13 +1,10 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-app = FastAPI()
+from pydantic import BaseModel,Field
 
 # Pydantic model for prompt
 
 class PromptRequest(BaseModel):
-    prompt: str 
+    prompt: str = Field(description="Use only the strings")
 
 class PromptResponse(BaseModel):
-    org_prompt: str
+    orginal_prompt: str
     optimized_prompt: str
