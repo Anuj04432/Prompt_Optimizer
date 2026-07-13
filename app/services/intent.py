@@ -1,4 +1,4 @@
-from app.rules.intents import intent
+from rules.intents import intent
 
 def detect_intent(prompt):
     prompt = prompt.lower()
@@ -16,4 +16,4 @@ def detect_intent(prompt):
         return "unknown"
     
 
-print(detect_intent("describe  the python code"))
+
