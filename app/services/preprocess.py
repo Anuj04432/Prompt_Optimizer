@@ -1,4 +1,4 @@
-from app.rules.rules import rules
+from rules.rules import rules
 import nltk
 from nltk.stem import WordNetLemmatizer
 
@@ -25,11 +25,18 @@ def optimize(prompt):
 
     opt_role = "\n".join(role)
     opt_inst = "\n".join(f"-{i}" for i in instructions)
-    return {
-        "original_prompt":opt_role,
-        "optimized_prompt":opt_inst
+    
+    response = {
+        "original prompt":prompt
     }
 
+    if role:
+        response["role"] = opt_role
+
+    if instructions:
+        response["instructions"] = opt_inst
+
+    return response
 
 
 
