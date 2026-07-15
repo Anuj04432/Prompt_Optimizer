@@ -1,42 +1,22 @@
 from rules.rules import rules
 import nltk
 from nltk.stem import WordNetLemmatizer
+import re
 
-nltk.download("wordnet")
-nltk.download("omw-1.4")
-
-
-def optimize(prompt):
-    lematizer = WordNetLemmatizer()
-    word = [lematizer.lemmatize(word,pos="v") for word in prompt.split()]
-    prompt =  (" ".join(word)).capitalize()
+# nltk.download("wordnet")
+# nltk.download("omw-1.4")
 
 
-    role = []
-    instructions = []
-    for word in prompt.lower().split():
-        if word in rules:
-            if "role" in rules[word]:
-                role.append(rules[word]["role"])
-            if "instructions" in rules[word]:
-                instructions.extend(rules[word]["instructions"])
-    role = list(dict.fromkeys(role))
-    instructions = list(dict.fromkeys(instructions))
+def preprocess(prompt):
+    lematize = WordNetLemmatizer()
+    prompt = prompt.lower()
 
-    opt_role = "\n".join(role)
-    opt_inst = "\n".join(f"-{i}" for i in instructions)
+
+
+    prompt = re.sub(r"[,.<>/^;()\[\]{}\"]","",prompt)
+    prompt = [lematize.lemmatize(word,pos = "v") for word in prompt.split()]
     
-    response = {
-        "original prompt":prompt
-    }
+    return " ".join(prompt)
 
-    if role:
-        response["role"] = opt_role
-
-    if instructions:
-        response["instructions"] = opt_inst
-
-    return response
-
-
+print(preprocess("I want to/? sbkd() learn python today"))
 
