@@ -1,7 +1,13 @@
 from rules.intents import intent
+from services.preprocess import preprocess
 
 def detect_intent(prompt):
-    prompt = prompt.lower()
+    prompt = preprocess(prompt)
+
+    language = ["python","english","java","marathi","javascript","html","css","php","sql","hindi","kannada","telegu"]
+    task = ["coding","writing","thinking","analyzing","building","explaining","debugging","learning","reading","writing","researching","designing","testing","reviewing","collaborating","communicating"]
+
+
 
     prompt_intent = []
 
@@ -14,6 +20,9 @@ def detect_intent(prompt):
         return {"intents":[i for i in set(prompt_intent)]}
     else:       
         return "unknown"
+    
+    
+print(detect_intent("I want to (learn) python today!!!"))
     
 
 
