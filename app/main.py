@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from models.prompt import PromptRequest ,PromptResponse
 from services.intent import detect_intent
-from services.preprocess import optimize
+from services.preprocess import preprocess
+from services.optimization import optimized_prompt
 
 app = FastAPI()
 
@@ -30,10 +31,18 @@ def check_intent(prompt: str):
 
 @app.get("/preprocess/{prompt}")
 def get_preprocess(prompt: str):
-    pre = optimize(prompt)
+    pre = preprocess(prompt)
 
     return {
         "optimized prompt":pre
     }
+
+@app.get("/optimizied/{prompt}")
+
+def optimization(prompt: str):
+    opt =  optimized_prompt(prompt)
+
+    return opt
+
 
     
