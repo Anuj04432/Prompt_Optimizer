@@ -11,12 +11,12 @@ def preprocess(prompt):
     lematize = WordNetLemmatizer()
     prompt = prompt.lower()
 
-
+    prompt = prompt.replace("!!","")
 
     prompt = re.sub(r"[,.<>/^;()\[\]{}\"]","",prompt)
     prompt = [lematize.lemmatize(word,pos = "v") for word in prompt.split()]
     
     return " ".join(prompt)
 
-print(preprocess("I want to/? sbkd() learn python today"))
+
 
