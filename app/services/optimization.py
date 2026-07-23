@@ -10,13 +10,15 @@ def optimized_prompt(prompt):
     
     else:
         intent = detect_intent(prompt)
-        word = []
-        for k,v in intent.items():
-            word.extend(v)
+        if intent!="unknown":
+            word = [k for k in intent["intents"]]
+            return word
+        else:
+            return "unknown"
 
-        return word
+        
 
-            
+          
 
         
     

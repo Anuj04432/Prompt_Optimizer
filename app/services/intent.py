@@ -22,7 +22,5 @@ def detect_intent(prompt):
         return "unknown"
     
     
-print(detect_intent("I want to (learn) python today!!!"))
-    
 
 
