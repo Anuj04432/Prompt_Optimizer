@@ -2,3 +2,7 @@ nltk
 scikit-learn
 fastapi
 pydantic
+openai
+scikit-learn
+langchain-openrouter
+uvicorn
