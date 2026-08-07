@@ -5,15 +5,20 @@ from services.compressor import compress, count_tokens
 from services.evaluator import similarity_score
 from models.prompt import PromptResponse
 
+# If the LLM rewrite's similarity to the original prompt drops below this,
+# we don't trust it — the model likely drifted or hallucinated content that
+# wasn't in the original ask, so fall back to the safer rule-based version.
+MIN_SIMILARITY = 0.20
+
 
 def optimize_prompt(prompt: str, mode: str = "hybrid") -> PromptResponse:
     """
     mode:
       "rules" -> rule-based composition only, no LLM call (fast, free, offline)
       "llm"   -> LLM rewrite, informed by rule_spec for role/instructions
-      "hybrid"-> same as "llm" for now; kept as its own mode so the rule
-                 pass can be extended into a pre-cleanup step later
-                 without changing the API surface
+      "hybrid"-> LLM rewrite with an automatic fallback to the rule-based
+                 version if the rewrite drifts too far from the original
+                 (similarity_score < MIN_SIMILARITY)
     """
     words = prompt.split()
     if len(words) < 3:
@@ -28,11 +33,17 @@ def optimize_prompt(prompt: str, mode: str = "hybrid") -> PromptResponse:
 
     cleaned = preprocess(prompt)
     rule_spec = rule_engine(prompt)  # rule_engine runs its own intent detection internally
+    rule_based_text = _rule_spec_to_text(rule_spec, cleaned)
 
     if mode == "rules":
-        rewritten = _rule_spec_to_text(rule_spec, cleaned)
+        rewritten = rule_based_text
     else:
         rewritten = llm_rewrite(cleaned, rule_spec["role"], rule_spec["instructions"])
+
+        if mode == "hybrid":
+            score = similarity_score(prompt, rewritten)
+            if score < MIN_SIMILARITY:
+                rewritten = rule_based_text  # LLM drifted too far, use the safe fallback
 
     optimized = compress(rewritten)
     score = similarity_score(prompt, optimized)
