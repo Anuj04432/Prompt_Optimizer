@@ -6,3 +6,4 @@ openai
 scikit-learn
 langchain-openrouter
 uvicorn
+dotenv
