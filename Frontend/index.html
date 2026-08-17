@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+      <h1>Prompt Optimizer</h1>
+
+  <textarea id="promptInput" rows="4" cols="50" placeholder="Type your prompt here..."></textarea>
+
+  <br><br>
+
+  <select id="modeSelect">
+    <option value="hybrid">Hybrid (rules + LLM)</option>
+    <option value="rules">Rules only</option>
+    <option value="llm">LLM only</option>
+  </select>
+
+  <br><br>
+
+  <button id="optimizeBtn">Optimize</button>
+
+
+  <div id="result" style="margin-top: 20px; display: none;">
+    <h3>Optimized Prompt</h3>
+    <p id="optimizedText"></p>
+
+    <p><strong>Intent:</strong> <span id="intentText"></span></p>
+    <p><strong>Tokens:</strong> <span id="tokenText"></span></p>
+    <p><strong>Similarity Score:</strong> <span id="scoreText"></span></p>
+  </div>
+
+<script>
+    const button = document.getElementById("optimizeBtn");
+    const input = document.getElementById("promptInput");
+    const modeSelect = document.getElementById("modeSelect");
+
+    button.addEventListener("click", async function () {
+      const response = await fetch("http://127.0.0.1:8000/optimize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: input.value,
+          mode: modeSelect.value
+        })
+      });
+
+      const data = await response.json();
+
+      document.getElementById("optimizedText").textContent = data.optimized_prompt;
+      document.getElementById("intentText").textContent = data.intent.join(", ");
+      document.getElementById("tokenText").textContent =
+        data.original_tokens + " → " + data.optimized_tokens;
+      document.getElementById("scoreText").textContent = data.similarity_score;
+
+      document.getElementById("result").style.display = "block";
+    });
+  </script>
+</body>
+</html>
