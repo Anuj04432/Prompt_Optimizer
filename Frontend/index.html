@@ -1,64 +1,256 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Optimizer — Intelligent AI & NLP Prompt Engineering</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-      <h1>Prompt Optimizer</h1>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Prompt Optimizer</h1>
+          <p>Multi-stage Hybrid NLP &amp; LLM Prompt Refinement Engine</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="statusBadge" class="status-badge disconnected" title="Backend API status">
+          <span class="status-dot"></span>
+          <span id="statusText">Checking API...</span>
+        </div>
+        <button id="themeToggle" class="icon-btn" title="Toggle Theme" aria-label="Toggle Theme">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer" class="icon-btn" title="View OpenAPI Swagger Documentation">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          API Docs
+        </a>
+      </div>
+    </header>
 
-  <textarea id="promptInput" rows="4" cols="50" placeholder="Type your prompt here..."></textarea>
+    <!-- Main Workbench Grid -->
+    <main class="main-grid">
+      <!-- Left Column: Input Panel -->
+      <section class="glass-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Prompt Input
+          </h2>
+        </div>
 
-  <br><br>
+        <!-- Mode Selector -->
+        <span class="mode-selector-label">Optimization Mode</span>
+        <div class="mode-selector" role="group" aria-label="Optimization Mode Selection">
+          <button class="mode-btn active" data-mode="hybrid" type="button">
+            <span class="mode-title">⚡ Hybrid</span>
+            <span class="mode-subtitle">LLM + Drift Guard</span>
+          </button>
+          <button class="mode-btn" data-mode="rules" type="button">
+            <span class="mode-title">🛠️ Rules Only</span>
+            <span class="mode-subtitle">Deterministic &amp; Fast</span>
+          </button>
+          <button class="mode-btn" data-mode="llm" type="button">
+            <span class="mode-title">🤖 LLM Only</span>
+            <span class="mode-subtitle">Creative AI Rewrite</span>
+          </button>
+        </div>
 
-  <select id="modeSelect">
-    <option value="hybrid">Hybrid (rules + LLM)</option>
-    <option value="rules">Rules only</option>
-    <option value="llm">LLM only</option>
-  </select>
+        <!-- Input Area -->
+        <div class="input-wrapper">
+          <textarea
+            id="promptInput"
+            class="prompt-textarea"
+            placeholder="Type or paste your raw prompt here... (e.g. 'write a python function for binary search and explain it')"
+            rows="6"
+          ></textarea>
+          <div class="textarea-footer">
+            <div class="prompt-stats">
+              <span id="charCount">0 chars</span>
+              <span>•</span>
+              <span id="wordCount">0 words</span>
+              <span>•</span>
+              <span id="estTokens">~0 tokens</span>
+            </div>
+            <button id="clearBtn" class="clear-btn-link" type="button">Clear</button>
+          </div>
+        </div>
 
-  <br><br>
+        <!-- Quick Sample Chips -->
+        <div class="samples-section">
+          <div class="samples-label">Quick Sample Prompts</div>
+          <div class="sample-chips">
+            <button class="sample-chip" data-sample="python" type="button">💻 Python Code</button>
+            <button class="sample-chip" data-sample="email" type="button">✉️ Formal Email</button>
+            <button class="sample-chip" data-sample="sql" type="button">🗄️ SQL Optimization</button>
+            <button class="sample-chip" data-sample="resume" type="button">📄 ATS Resume</button>
+            <button class="sample-chip" data-sample="blog" type="button">📝 Blog Article</button>
+          </div>
+        </div>
 
-  <button id="optimizeBtn">Optimize</button>
+        <!-- Action Button Row -->
+        <div class="button-row">
+          <button id="optimizeBtn" class="primary-btn" type="button">
+            <span class="spinner"></span>
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Optimize Prompt</span>
+            <kbd class="btn-kbd">Ctrl+Enter</kbd>
+          </button>
+        </div>
 
+        <!-- History Drawer -->
+        <div id="historySection" class="history-section" style="display: none;">
+          <div class="history-header">
+            <span class="history-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Recent History
+            </span>
+            <button id="clearHistoryBtn" class="clear-btn-link" type="button">Clear History</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </section>
 
-  <div id="result" style="margin-top: 20px; display: none;">
-    <h3>Optimized Prompt</h3>
-    <p id="optimizedText"></p>
+      <!-- Right Column: Output & Metrics Panel -->
+      <section class="glass-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Optimized Output &amp; Analytics
+          </h2>
+        </div>
 
-    <p><strong>Intent:</strong> <span id="intentText"></span></p>
-    <p><strong>Tokens:</strong> <span id="tokenText"></span></p>
-    <p><strong>Similarity Score:</strong> <span id="scoreText"></span></p>
+        <!-- Empty Placeholder State -->
+        <div id="emptyState" class="empty-placeholder">
+          <div class="placeholder-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h3>Awaiting Input</h3>
+          <p>Enter your raw prompt on the left and click <strong>Optimize Prompt</strong> to view structured enhancements, intent tags, token savings, and similarity metrics.</p>
+        </div>
+
+        <!-- Populated Results Container -->
+        <div id="resultContent" class="result-content" style="display: none;">
+          <!-- Optimized Prompt Box with Copy Action -->
+          <div class="optimized-box-wrapper">
+            <div id="optimizedOutput" class="optimized-output"></div>
+            <button id="copyBtn" class="copy-btn" type="button" title="Copy to clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy
+            </button>
+          </div>
+
+          <!-- Metrics Grid -->
+          <div class="metrics-grid">
+            <!-- Detected Intents -->
+            <div class="metric-card">
+              <div class="metric-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                  <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+                Detected Intents
+              </div>
+              <div id="intentsList" class="intents-list"></div>
+            </div>
+
+            <!-- Token Transition -->
+            <div class="metric-card">
+              <div class="metric-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Tokens (Original → Optimized)
+              </div>
+              <div id="tokenStats" class="metric-value">0 → 0</div>
+              <div id="tokenBadge"></div>
+            </div>
+
+            <!-- Similarity Retention Score -->
+            <div class="metric-card">
+              <div class="metric-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Fidelity / Retention
+                <span id="similarityBadge" class="fidelity-badge badge-high">High Retention</span>
+              </div>
+              <div id="similarityScore" class="metric-value">100%</div>
+              <div class="fidelity-bar-container">
+                <div id="fidelityBar" class="fidelity-bar" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <!-- Latency Metric -->
+            <div class="metric-card">
+              <div class="metric-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Execution Latency
+              </div>
+              <div id="latencyStat" class="metric-value">-- ms</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-<script>
-    const button = document.getElementById("optimizeBtn");
-    const input = document.getElementById("promptInput");
-    const modeSelect = document.getElementById("modeSelect");
-
-    button.addEventListener("click", async function () {
-      const response = await fetch("http://127.0.0.1:8000/optimize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt: input.value,
-          mode: modeSelect.value
-        })
-      });
-
-      const data = await response.json();
-
-      document.getElementById("optimizedText").textContent = data.optimized_prompt;
-      document.getElementById("intentText").textContent = data.intent.join(", ");
-      document.getElementById("tokenText").textContent =
-        data.original_tokens + " → " + data.optimized_tokens;
-      document.getElementById("scoreText").textContent = data.similarity_score;
-
-      document.getElementById("result").style.display = "block";
-    });
-  </script>
+  <!-- JavaScript Client Logic -->
+  <script src="app.js"></script>
 </body>
 </html>
