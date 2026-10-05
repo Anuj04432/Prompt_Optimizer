@@ -2,7 +2,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from models.prompt import PromptRequest, PromptResponse
 from services.intent import detect_intent
 from services.preprocess import preprocess
@@ -23,22 +22,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-FRONTEND_DIR = Path(__file__).parent / "Frontend"
-if FRONTEND_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
-
-    @app.get("/", include_in_schema=False)
-    def serve_frontend():
-        return FileResponse(FRONTEND_DIR / "index.html")
-
-    @app.get("/style.css", include_in_schema=False)
-    def serve_css():
-        return FileResponse(FRONTEND_DIR / "style.css")
-
-    @app.get("/app.js", include_in_schema=False)
-    def serve_js():
-        return FileResponse(FRONTEND_DIR / "app.js")
 
 
 @app.post("/optimize", response_model=PromptResponse)
@@ -61,3 +44,10 @@ def get_preprocess(prompt: str):
     return {
         "optimized prompt": pre,
     }
+
+
+# Mount the frontend directory so "uvicorn main:app --reload" serves
+# the entire application (HTML, CSS, JS) at http://127.0.0.1:8000/
+FRONTEND_DIR = Path(__file__).parent / "Frontend"
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
