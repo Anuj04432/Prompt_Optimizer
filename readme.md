@@ -5,7 +5,7 @@
 [![OpenRouter](https://img.shields.io/badge/LLM-OpenRouter%20%2F%20OpenAI-blueviolet.svg?style=flat)](https://openrouter.ai/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat)](LICENSE)
 
-An intelligent, hybrid prompt enhancement system designed to transform vague, unstructured user prompts into clear, highly structured, and context-rich prompts tailored for Large Language Models (LLMs).
+It is an intelligent, hybrid prompt enhancement system designed to transform vague, unstructured user prompts into clear, highly structured, and context-rich prompts tailored for Large Language Models (LLMs).
 
 ---
 
