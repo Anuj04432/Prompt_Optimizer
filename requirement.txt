@@ -1,9 +1,9 @@
 nltk
-scikit-learn
 fastapi
 pydantic
 openai
-scikit-learn
 langchain-openrouter
 uvicorn
-dotenv
+python-dotenv
+tiktoken
+scikit-learn
