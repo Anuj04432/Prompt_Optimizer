@@ -4,8 +4,8 @@ from services.intent import detect_intent
 
 def rule_engine(prompt: str) -> dict:
     """
-    Detects intent for the prompt, then combines the role + instructions
-    of every matched intent from rules.rules into a single rule spec.
+    Detects intents for the prompt, then combines the role and instructions
+    of every matched intent from rules.rules into a single unified rule spec.
 
     Returns:
         {
@@ -15,7 +15,9 @@ def rule_engine(prompt: str) -> dict:
         }
     """
     detected = detect_intent(prompt)
-    matched_intents = detected["intents"] if detected != "unknown" else ["general"]
+    matched_intents = detected.get("intents") or []
+    if not matched_intents:
+        matched_intents = ["general"]
 
     role = None
     instructions = []
@@ -31,7 +33,7 @@ def rule_engine(prompt: str) -> dict:
     if not instructions:
         instructions = rules["general"]["instructions"]
 
-    # de-duplicate while preserving order
+    # De-duplicate while preserving insertion order
     seen = set()
     unique_instructions = []
     for ins in instructions:
