@@ -1,40 +1,82 @@
-from nltk.corpus import stopwords
+import re
 
-# nltk.download("stopwords")  # run once if not already downloaded
+try:
+    import tiktoken
+    _TIKTOKEN_ENCODER = tiktoken.get_encoding("cl100k_base")
+except Exception:
+    _TIKTOKEN_ENCODER = None
 
-_STOPWORDS = None
-_FILLER = {"just", "really", "very", "actually", "basically", "please", "kindly"}
+# Low-information conversational fluff and fillers
+_FILLER_WORDS = {
+    "basically", "actually", "literally", "kindly", "please",
+    "just", "really", "very", "totally", "honestly", "simply"
+}
 
-
-def _get_stopwords():
-    global _STOPWORDS
-    if _STOPWORDS is None:
-        _STOPWORDS = set(stopwords.words("english"))
-    return _STOPWORDS
+# Common polite fluff prefixes that add no prompt engineering value
+_FILLER_PHRASES = [
+    re.compile(r"^(can|could)\s+you\s+(please\s+)?(help\s+me\s+)?", re.IGNORECASE),
+    re.compile(r"^i\s+(would\s+like|want|need)\s+you\s+to\s+", re.IGNORECASE),
+    re.compile(r"^i\s+was\s+wondering\s+if\s+you\s+could\s+", re.IGNORECASE),
+    re.compile(r"^(please\s+)?help\s+me\s+(to\s+)?", re.IGNORECASE),
+]
 
 
 def count_tokens(text: str) -> int:
-    """Rough word-based token estimate. Swap for tiktoken if you need
-    exact per-model counts later."""
-    return len(text.split())
+    """
+    Returns exact BPE token count using tiktoken (cl100k_base).
+    Falls back to a calibrated word-count multiplier if tiktoken is unavailable.
+    """
+    if not text:
+        return 0
+
+    if _TIKTOKEN_ENCODER is not None:
+        try:
+            return len(_TIKTOKEN_ENCODER.encode(text))
+        except Exception:
+            pass
+
+    # Fallback estimate: 1 word ≈ 1.3 tokens for English prose & code
+    return max(1, int(len(text.split()) * 1.3))
 
 
-def compress(text: str, max_ratio: float = 0.85) -> str:
+def compress(text: str, min_retained_ratio: float = 0.5) -> str:
     """
-    Strips low-value filler words when the prompt is long enough to
-    safely trim. Never compresses below max_ratio of the original word
-    count, so short/dense prompts are left untouched.
+    Strips low-value conversational filler words and phrases while preserving
+    core semantic meaning and structure.
     """
-    words = text.split()
+    if not text or not text.strip():
+        return text
+
+    original_text = text.strip()
+    words = original_text.split()
     original_len = len(words)
 
-    if original_len <= 8:
-        return text
+    # Don't aggressively compress very short phrases (e.g. 3 words)
+    if original_len <= 4:
+        return original_text
 
-    filler = _FILLER
-    kept = [w for w in words if w.strip(".,!?").lower() not in filler]
+    working_text = original_text
 
-    if len(kept) < original_len * max_ratio:
-        return text
+    # 1. Strip conversational leading phrases if prompt is long enough
+    if original_len > 6:
+        for phrase_pat in _FILLER_PHRASES:
+            new_text = phrase_pat.sub("", working_text).strip()
+            if new_text and len(new_text.split()) >= 3:
+                # Capitalize the first letter if stripped
+                working_text = new_text[0].upper() + new_text[1:] if len(new_text) > 1 else new_text.upper()
+                break
 
-    return " ".join(kept)
+    # 2. Strip standalone filler words
+    tokens = working_text.split()
+    filtered_tokens = []
+    for token in tokens:
+        clean_word = token.strip(".,!?:;\"'()[]{}").lower()
+        if clean_word in _FILLER_WORDS:
+            continue
+        filtered_tokens.append(token)
+
+    # Safety guard: ensure we didn't wipe out the prompt or retain fewer words than threshold
+    if len(filtered_tokens) >= max(3, int(original_len * min_retained_ratio)):
+        return " ".join(filtered_tokens)
+
+    return working_text
