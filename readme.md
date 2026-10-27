@@ -1,4 +1,4 @@
-# 🚀 Prompt Optimizer
+# 🚀 AI Prompt Optimizer
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141+-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg?style=flat&logo=Python&logoColor=white)](https://www.python.org/)
