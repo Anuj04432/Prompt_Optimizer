@@ -1,0 +1,184 @@
+================================================================================
+          PROMPT OPTIMIZER — CHROME EXTENSION ROADMAP & ARCHITECTURE
+================================================================================
+
+Date Created: October 27, 2026
+Status: Phase 1 Completed | Phases 2 - 5 Ready for Implementation
+
+This document serves as your complete blueprint for turning the Prompt Optimizer
+project into a production-grade Chrome Extension (Manifest V3).
+
+--------------------------------------------------------------------------------
+DIRECTORY STRUCTURE TO BUILD (extension/):
+--------------------------------------------------------------------------------
+
+Prompt_Optimizer/
+│
+├── extension/
+│   ├── manifest.json            # Manifest V3 extension configuration
+│   ├── background/
+│   │   └── background.js        # Service worker (handles CORS, shortcuts, context menus)
+│   ├── content/
+│   │   ├── content.js           # Injects optimize button into ChatGPT, Claude, Gemini
+│   │   └── content.css          # In-page floating pill and diff preview styling
+│   ├── popup/
+│   │   ├── popup.html           # 420px extension popup window
+│   │   ├── popup.js             # Client logic, streaming receiver, copy actions
+│   │   └── popup.css            # Compact styling adapted from Frontend/style.css
+│   ├── options/
+│   │   ├── options.html         # Settings UI (API keys, model picker, backend URL)
+│   │   ├── options.js           # Saves user preferences to chrome.storage.sync
+│   │   └── options.css          # Clean settings stylesheet
+│   ├── engine/                  # Optional standalone JS engine (zero server needed)
+│   │   ├── rules.js             # Client-side port of rules/rules.py
+│   │   ├── intents.js           # Client-side port of rules/intents.py
+│   │   └── compressor.js        # Client-side filler word stripper
+│   └── icons/
+│       ├── icon16.png           # 16x16 favicon
+│       ├── icon48.png           # 48x48 extensions list
+│       └── icon128.png          # 128x128 Chrome Web Store & install icon
+
+
+================================================================================
+PHASE 2: CHROME EXTENSION FOUNDATION (MANIFEST V3)
+================================================================================
+
+Objective:
+Create the extension scaffold, build the Popup UI, and connect it to your
+FastAPI backend via the background service worker.
+
+Key Tasks:
+1. Manifest V3 Configuration (`manifest.json`):
+   - Set `"manifest_version": 3`.
+   - Permissions needed:
+     - `"storage"`: Save API keys, chosen mode, and custom prompt templates.
+     - `"activeTab"`: Read/write to the active web page.
+     - `"contextMenus"`: Add right-click "Optimize Prompt" option.
+     - `"scripting"`: Programmatically inject scripts into chat textareas.
+   - Host permissions:
+     - `http://127.0.0.1:8000/*` (local development)
+     - `https://openrouter.ai/*` or `https://api.openai.com/*` (for standalone mode)
+     - Any remote cloud backend URL (e.g., Render, Railway, Fly.io).
+
+2. Popup UI Adaptation (`popup.html`, `popup.js`, `popup.css`):
+   - Adapt `Frontend/index.html` and `Frontend/style.css` to fit standard extension
+     dimensions (Width: 420px, Height: max 580px with clean scrollbars).
+   - Mode switcher dropdown: Hybrid, Rules Only (Fast/Offline), LLM Only.
+   - Real-time token counter (Original Tokens -> Optimized Tokens).
+   - Single-click "Copy" button with visual toast feedback.
+   - Streaming text animation (consuming `POST /optimize/stream`).
+
+3. Options & Settings Page (`options.html`, `options.js`):
+   - Backend Toggle:
+     [ ] Option A: Connect to Python Backend (Default: http://127.0.0.1:8000)
+     [ ] Option B: Direct Client-Side API (Bring Your Own API Key)
+   - Custom Model Selection (e.g., claude-3.5-haiku, gemini-2.0-flash, gpt-4o-mini).
+   - Custom Rule / Persona manager (allow users to add their own instructions).
+
+4. Background Service Worker (`background.js`):
+   - Acts as a network proxy to bypass cross-origin restrictions cleanly.
+   - Listens for messages from popup and content scripts via `chrome.runtime.onMessage`.
+
+
+================================================================================
+PHASE 3: IN-BROWSER SUPERPOWERS (CONTENT SCRIPTS & IN-PLACE OPTIMIZE)
+================================================================================
+
+Objective:
+Enable users to optimize prompts directly inside AI websites (ChatGPT, Claude,
+Gemini, DeepSeek) without opening the popup window.
+
+Key Tasks:
+1. Target AI Input Box Selectors (`content.js`):
+   - ChatGPT: `#prompt-textarea`, `div[contenteditable="true"]`
+   - Claude: `div[contenteditable="true"]`, `div.ProseMirror`
+   - Google Gemini: `rich-textarea div[contenteditable="true"]`, `textarea`
+   - DeepSeek / Perplexity: standard `textarea` and editable inputs.
+
+2. In-Input Floating "Optimize" Badge:
+   - Inject a subtle, non-intrusive floating pill button ("✨ Optimize") in the bottom
+     right corner of any detected prompt textarea.
+   - When clicked, it extracts the current draft text, runs optimization, and replaces
+     the input text directly with undo support (`Ctrl+Z`).
+
+3. Keyboard Shortcut (Hotkeys):
+   - Configure a global hotkey via `manifest.json` `commands`:
+     - Windows/Linux: `Ctrl + Shift + O`
+     - macOS: `Command + Shift + O`
+   - Pressing the hotkey while typing in any web textarea instantly optimizes the text.
+
+4. Right-Click Context Menu (`chrome.contextMenus`):
+   - Highlight any text on any webpage -> Right-click -> "⚡ Optimize as Prompt".
+   - Submenus: "Auto Intent", "As Code / Dev", "As Email / Business", "As Academic".
+   - Shows a lightweight modal tooltip with "Copy" or "Replace" actions.
+
+
+================================================================================
+PHASE 4: STANDALONE CLIENT-SIDE ENGINE (ZERO PYTHON BACKEND REQUIRED)
+================================================================================
+
+Objective:
+Allow the extension to work 100% out-of-the-box for any user without forcing them
+to run a local Python terminal (`uvicorn main:app`).
+
+Key Tasks:
+1. Port Core Services to JavaScript (`extension/engine/`):
+   - `rules.js`: JavaScript export of all intent personas and guidelines.
+   - `intents.js`: Regex word-boundary matching in pure JS.
+   - `compressor.js`: JS regex stripping for filler words (`basically`, `please`, etc.).
+   - This makes the `rules` mode 100% offline, 0ms latency, and 0 API cost!
+
+2. Direct Browser-to-LLM Streaming:
+   - When user provides their OpenRouter / OpenAI / Gemini / Groq API key in Settings,
+     the background worker calls the provider directly using `fetch()` and `ReadableStream`.
+   - Supports local LLMs via Ollama (`http://localhost:11434/v1`).
+
+3. Experimental Chrome Built-in AI (`window.ai`):
+   - Integrate Google Chrome's native Prompt API (`ai.languageModel`).
+   - If available on the user's Chrome browser, prompts are rewritten on-device by
+     Gemini Nano with 100% privacy, zero network requests, and zero cost.
+
+
+================================================================================
+PHASE 5: ADVANCED FEATURES, TEMPLATES & CHROME STORE PACKAGING
+================================================================================
+
+Objective:
+Add high-value power-user features, prompt templates, history, and package
+the extension for distribution.
+
+Key Tasks:
+1. Prompt History & Favorites Drawer:
+   - Persist the last 25 prompt optimizations in `chrome.storage.local`.
+   - Add a "⭐ Favorite" button to save recurring prompts for instant 1-click reuse.
+   - Search bar to filter past optimizations.
+
+2. Persona & Style Presets:
+   - Allow users to force a persona regardless of detected intent:
+     - "Senior Staff Architect" (deep technical rigor, edge cases, benchmarks)
+     - "Executive Brief" (bulleted, action-driven, bottom-line upfront)
+     - "Clear Teacher" (analogies, step-by-step breakdown)
+     - "Concise / Token Saver" (dense instructions, minimal output tokens)
+
+3. Diff & Before/After Comparison:
+   - A toggle in the popup to show a color-coded Diff view:
+     - Green: Injected constraints and guidelines.
+     - Red (Strikethrough): Stripped filler words and conversational fluff.
+
+4. Web Store Packaging & Deployment:
+   - Create a clean ZIP archive excluding `.venv`, `.git`, `tests`, and temporary files.
+   - Prepare Store listing assets:
+     - 16x16, 48x48, 128x128 icons.
+     - 1280x800 promotional screenshot.
+     - Clear privacy declaration (stating whether API keys remain local).
+
+--------------------------------------------------------------------------------
+HOW TO LOAD & TEST UNPACKED EXTENSION IN CHROME (QUICK REFERENCE):
+--------------------------------------------------------------------------------
+1. Open Google Chrome.
+2. Navigate to `chrome://extensions/`.
+3. Toggle "Developer mode" ON (top right switch).
+4. Click "Load unpacked" (top left button).
+5. Select the `Prompt_Optimizer/extension` directory.
+6. The Prompt Optimizer extension icon will appear in your Chrome toolbar!
+================================================================================
