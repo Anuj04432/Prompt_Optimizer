@@ -1,42 +1,62 @@
 import re
 from nltk.corpus import stopwords
+from services.preprocess import _get_lemmatizer
 
 _STOPWORDS = None
 
 
-def _get_stopwords():
+def _get_stopwords() -> set:
     global _STOPWORDS
     if _STOPWORDS is None:
-        _STOPWORDS = set(stopwords.words("english"))
+        try:
+            _STOPWORDS = set(stopwords.words("english"))
+        except Exception:
+            _STOPWORDS = {
+                "a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
+                "any", "are", "as", "at", "be", "because", "been", "before", "being", "below",
+                "between", "both", "but", "by", "could", "did", "do", "does", "doing", "down",
+                "during", "each", "few", "for", "from", "further", "had", "has", "have", "having",
+                "he", "her", "here", "hers", "herself", "him", "himself", "his", "how", "i", "if",
+                "in", "into", "is", "it", "its", "itself", "me", "more", "most", "my", "myself",
+                "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought",
+                "our", "ours", "ourselves", "out", "over", "own", "same", "she", "should", "so",
+                "some", "such", "than", "that", "the", "their", "theirs", "them", "themselves",
+                "then", "there", "these", "they", "this", "those", "through", "to", "too", "under",
+                "until", "up", "very", "was", "we", "were", "what", "when", "where", "which", "while",
+                "who", "whom", "why", "with", "would", "you", "your", "yours", "yourself"
+            }
     return _STOPWORDS
 
 
-def _content_words(text: str) -> set:
-    """Lowercased alphabetic words, minus stopwords and very short words."""
+def _extract_lemmatized_content_words(text: str) -> set[str]:
+    """
+    Extracts lowercased, lemmatized alphabetic words, excluding stopwords.
+    Ensures that morphological variations (e.g. 'debugging' vs 'debug') match.
+    """
     words = re.findall(r"[a-zA-Z]+", text.lower())
     stop = _get_stopwords()
-    return {w for w in words if w not in stop and len(w) > 2}
+    lemmatizer = _get_lemmatizer()
+
+    content_words = set()
+    for w in words:
+        if len(w) > 2 and w not in stop:
+            # Lemmatize both verb and noun forms
+            v_form = lemmatizer.lemmatize(w, pos="v")
+            n_form = lemmatizer.lemmatize(v_form, pos="n")
+            content_words.add(n_form)
+
+    return content_words
 
 
 def similarity_score(original: str, optimized: str) -> float:
     """
-    Keyword-retention score: what fraction of the ORIGINAL prompt's content
-    words survive somewhere in the optimized prompt.
-
-    This replaces a plain TF-IDF cosine similarity, which penalized
-    legitimate rewrite expansion just as much as genuine topic drift — a
-    5-word prompt honestly expanded into a full paragraph would score low
-    even with perfect fidelity, making it impossible to separate "good
-    rewrite" from "hallucinated rewrite" by score alone.
-
-    Recall against the original's own content words isn't penalized by
-    length or added structure, only by the original subject actually
-    disappearing — which is the failure mode we're trying to catch.
+    Keyword-retention recall score: what fraction of the ORIGINAL prompt's
+    key concepts survive in the optimized rewrite.
     """
-    orig_words = _content_words(original)
+    orig_words = _extract_lemmatized_content_words(original)
     if not orig_words:
-        return 1.0  # nothing meaningful in the original to check drift against
+        return 1.0  # Nothing substantive in the original to check drift against
 
-    opt_words = _content_words(optimized)
+    opt_words = _extract_lemmatized_content_words(optimized)
     retained = orig_words & opt_words
     return round(len(retained) / len(orig_words), 3)
